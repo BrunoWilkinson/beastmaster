@@ -1,7 +1,7 @@
 extends Control
 
 func _ready() -> void:
-	$VBoxContainer/PlayVsAi.button_down.connect(_play_vs_ai_button_down)
+	$VBoxContainer/PlayVsAI.button_down.connect(_play_vs_ai_button_down)
 	$VBoxContainer/HostGame.button_down.connect(_host_game_button_down)
 	$VBoxContainer/JoinGame.button_down.connect(_join_game_button_down)
 	$VBoxContainer/Settings.button_down.connect(_settings_button_down)

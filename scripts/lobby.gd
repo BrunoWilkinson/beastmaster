@@ -16,11 +16,7 @@ const MAX_CONNECTIONS: int = 1
 var players: Dictionary[int, Dictionary] = {}
 
 # This is the local player info. This should be modified locally
-var local_player_info: Dictionary[String, Variant] = {
-	"Name": "Player",
-	"IsReady": false,
-	"HasLoaded": false
-}
+var local_player_info: Dictionary[String, Variant] = _default_value_player_info()
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -49,10 +45,11 @@ func create_game() -> Error:
 		return error
 
 	multiplayer.multiplayer_peer = peer
+	local_player_info["IsReady"] = true
 	_create_player(1, local_player_info)
 	return Error.OK
 
-func remove_multiplayer_peer():
+func remove_multiplayer_peer() -> void:
 	multiplayer.multiplayer_peer = null
 	players.clear()
 
@@ -63,15 +60,24 @@ func load_game(game_scene_path: String) -> void:
 	get_tree().change_scene_to_file(game_scene_path)
 
 @rpc("any_peer", "call_local", "reliable")
-func player_ready():
+func player_ready() -> void:
 	if !multiplayer.is_server():
 		return
 	
 	var peer_id := multiplayer.get_remote_sender_id()
 	players[peer_id]["IsReady"] = !players[peer_id]["IsReady"]
+	_set_players.rpc(players)
 	
-	_set_players(players)
-
+func can_start_game() -> bool:
+	var all_player_ready := false
+	
+	if players.size() <= 1:
+		return all_player_ready
+	
+	for key in players.keys():
+		all_player_ready = players[key]["IsReady"]
+	return all_player_ready
+	
 # Every peer will call this when they have loaded the game scene.
 @rpc("any_peer", "call_local", "reliable")
 func player_loaded() -> void:
@@ -103,9 +109,7 @@ func _on_peer_connected(id: int) -> void:
 	if !multiplayer.is_server():
 		return
 	
-	var player_info: Dictionary[String, Variant] = {
-		"Name": "Player"
-	}	
+	var player_info: Dictionary[String, Variant] = _default_value_player_info()
 	_create_player(id, player_info)
 	_set_players.rpc(players)
 
@@ -128,3 +132,10 @@ func _create_player(in_player_id: int, in_player_info: Dictionary[String, Varian
 	in_player_info["Name"] += " " + str(in_player_id)
 	players[in_player_id] = in_player_info
 	player_connected.emit(in_player_id, in_player_info)
+	
+func _default_value_player_info() -> Dictionary[String, Variant]:
+	return {
+		"Name": "Player",
+		"IsReady": false,
+		"HasLoaded": false
+	}	
