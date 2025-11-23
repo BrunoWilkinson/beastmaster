@@ -81,23 +81,22 @@ func can_start_game() -> bool:
 # Every peer will call this when they have loaded the game scene.
 @rpc("any_peer", "call_local", "reliable")
 func player_loaded() -> void:
-	var peer_id := multiplayer.get_remote_sender_id()
-	players[peer_id]["HasLoaded"] = true
-	
 	if !multiplayer.is_server():
 		return
-	
+
+	var peer_id := multiplayer.get_remote_sender_id()
+	players[peer_id]["HasLoaded"] = true
+
 	_set_players(players)
-	
+
 	var players_loaded: int = 0
 	for key in players.keys():
 		if players[key]["HasLoaded"]:
 			players_loaded += 1
-	
+
 	if players_loaded == players.size():
 		$/root/Game.start_game()
-		players_loaded = 0
-		
+
 @rpc("call_local", "reliable")
 func _set_players(in_players: Dictionary[int, Dictionary]):
 	players = in_players

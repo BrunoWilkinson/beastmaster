@@ -48,13 +48,12 @@ func _get_player_label(peer_id: int) -> Label:
 		return $PlayerTwoLabel
 
 	return $PlayerOneLabel
-	
+
 func _on_start_game_button_down() -> void:
 	if !Lobby.can_start_game():
 		return
-	
-	#TODO Load the for all clients game
-	
+	Lobby.load_game.rpc("res://scenes/p2p_battle.tscn")
+
 func _on_ready_button_down() -> void:
 	Lobby.player_ready.rpc_id(1)
 	

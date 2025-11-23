@@ -46,7 +46,6 @@ var enemy_score := 0
 var debug_elapsed_time_label: Label;
 
 func _ready() -> void:
-	
 	$ColorRect.size = get_viewport_rect().size
 	$HUD.size = get_viewport_rect().size
 		
