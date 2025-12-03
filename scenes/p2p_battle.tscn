@@ -24,12 +24,4 @@ offset_right = 28.5
 offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
-text = "BATTLE"
-
-[node name="RoundIntroTimer" type="Timer" parent="."]
-
-[node name="HitMaxTimingTimer" type="Timer" parent="."]
-
-[node name="HitTimingTimer" type="Timer" parent="."]
-
-[node name="RoundEndTimer" type="Timer" parent="."]
+text = "TEXT STATE"
