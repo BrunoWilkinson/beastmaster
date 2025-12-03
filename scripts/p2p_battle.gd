@@ -33,6 +33,11 @@ var timer := 0.0
 func _ready() -> void:
 	label = $Label
 	label.text = "WAITING"
+	
+	$RoundNumber.text = "Round 1"
+	$Player1Score.text = "Player1 score: " + str(player1_score)
+	$Player2Score.text = "Player2 score: " + str(player2_score)
+	
 	Lobby.player_loaded.rpc_id(1)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -58,10 +63,10 @@ func _process(delta: float) -> void:
 			_round_intro()
 
 	if Input.is_action_just_pressed("hit") && state == State.ROUND_BATTLE:
-		_register_hit.rpc(1, timer)
+		print("HIT!")
+		_register_hit.rpc_id(1, timer)
 
 func start_game() -> void:
-	
 	if multiplayer.is_server():
 		_round_intro()
 
@@ -70,12 +75,30 @@ func _set_state(in_state: State):
 	state = in_state
 
 @rpc("call_local", "reliable")
+func _set_players_scores(in_player1_score: int, in_player2_score):
+	player1_score = in_player1_score
+	player2_score = in_player2_score
+	$Player1Score.text = "Player1 score: " + str(player1_score)
+	$Player2Score.text = "Player2 score: " + str(player2_score)
+
+@rpc("call_local", "reliable")
+func _set_round_number(in_round_number: int):
+	round_number = in_round_number
+	$RoundNumber.text = "Round " + str(round_number)
+
+@rpc("call_local", "reliable")
 func _reset_timer():
 	timer = 0.0
+
+@rpc("call_local", "reliable")
+func _reset_player_hit_timing():
+	player1_hit_timing = 0.0
+	player2_hit_timing = 0.0
 
 @rpc("any_peer", "call_local", "reliable")
 func _register_hit(in_timing: float):
 	var sender_id = multiplayer.get_remote_sender_id()
+	print(str(sender_id))
 	if sender_id == 1:
 		player1_hit_timing = in_timing
 	else:
@@ -88,9 +111,12 @@ func _round_intro() -> void:
 	state = State.ROUND_INTRO
 	if round_number != 0:
 		_reset_timer.rpc()
-	
+		_reset_player_hit_timing.rpc()
+
 	round_number += 1
 	hit_timing = randf_range(hit_min_timing, hit_max_timing)
+
+	_set_round_number.rpc(round_number)
 	_set_state.rpc(state)
 
 func _round_battle():
@@ -101,14 +127,11 @@ func _round_battle():
 func _round_over() -> void:
 	state = State.ROUND_END
 
-	var player1_result = abs(player1_hit_timing - hit_timing)
-	var player2_result = abs(player2_hit_timing - hit_timing)
-
 	# Smaller results wins
-	if player1_result < player2_result:
+	if player1_hit_timing < player2_hit_timing:
 		player1_score += 1
 		peer_id_winner = multiplayer.get_unique_id()
-	elif player1_result > player2_result:
+	elif player1_hit_timing > player2_hit_timing:
 		player2_score += 1
 		peer_id_winner = Lobby.players.keys()[0]
 	else:
@@ -116,4 +139,5 @@ func _round_over() -> void:
 		peer_id_winner = -1
 
 	_reset_timer.rpc()
+	_set_players_scores.rpc(player1_score, player2_score)
 	_set_state.rpc(state)
