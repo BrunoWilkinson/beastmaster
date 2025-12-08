@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://fqvvkgx7l53v"]
+[gd_scene load_steps=4 format=3 uid="uid://fqvvkgx7l53v"]
 
 [ext_resource type="Script" uid="uid://dv23my4vy8yfg" path="res://scripts/p2p_battle.gd" id="1_o8nfj"]
+[ext_resource type="PackedScene" uid="uid://bw75ima2et0so" path="res://systems/hit/hit.tscn" id="2_1h640"]
+[ext_resource type="PackedScene" uid="uid://qblyv7e42iih" path="res://systems/round/round.tscn" id="3_1mmmy"]
 
 [node name="Game" type="Control"]
 layout_mode = 3
@@ -53,3 +55,7 @@ offset_left = -128.0
 offset_bottom = 23.0
 grow_horizontal = 0
 text = "Player2 Score: -1"
+
+[node name="Hit" parent="." instance=ExtResource("2_1h640")]
+
+[node name="Round" parent="." instance=ExtResource("3_1mmmy")]
