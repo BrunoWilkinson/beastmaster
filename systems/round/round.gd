@@ -1,7 +1,7 @@
 class_name RoundSystem
 extends Node
 ## Round management
-## 
+##
 ## [color=Orange]Dependency:[/color] Requires [HitSystem] [br][br]
 ## Update the round state based on values given, 
 ## and emit those update to other systems.[br]
@@ -41,16 +41,18 @@ enum State {
 	WAITING
 }
 
-var _timer: float = 0.0
-var _state: State = State.WAITING
-var _hit_system: HitSystem = null
-
 ## Emit when the state has changed (requires an actual diff)
 signal state_changed(state: State)
 
+var _timer: float = 0.0
+var _state: State = State.WAITING
+var _counter := 0
+
+var _hit_system: HitSystem = null
+
 ## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
 func setup(in_hit_system: HitSystem) -> void:
-	assert(_hit_system == null)
+	assert(_hit_system != null)
 	_hit_system = in_hit_system
 
 ## Set values back to their init state [br] 
@@ -63,8 +65,13 @@ func reset():
 func get_state() -> State:
 	return _state
 
+## Getter for the current round timer
 func get_timer() -> float:
 	return _timer
+
+## Getter for the current round number
+func get_counter() -> int:
+	return _counter
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -83,6 +90,9 @@ func _process(delta: float) -> void:
 func _update_state(in_state: State) -> void:
 	if (_state == in_state):
 		return
-	
+
+	if _state == State.INTRO:
+		_counter += 1
+
 	_state = in_state
 	state_changed.emit(_state)

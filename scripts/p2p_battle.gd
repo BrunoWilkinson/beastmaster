@@ -8,9 +8,6 @@ extends Control
 @export var rounds_to_win := 3
 
 # Multiplayer State
-var round_number := 0
-var player1_score := 0
-var player2_score := 0
 var peer_id_winner := 0
 
 var label: Label = null
