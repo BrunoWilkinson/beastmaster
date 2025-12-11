@@ -24,9 +24,8 @@ extends Node
 ##     round_system.setup(hit_system)
 ## [/codeblock]
 
-@export var max_player := 2
-
 var _players_score: Dictionary[int, int]
+var _winner_id: int = 0
 var _hit_system: HitSystem = null
 
 ## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
@@ -34,13 +33,36 @@ func setup(in_hit_system: HitSystem) -> void:
 	assert(_hit_system != null)
 	_hit_system = in_hit_system
 
-func _increment_winner_score() -> void:
-	var winner_id: int = 0
+## Set the internal winner id back to init value which is zero
+func winner_reset() -> void:
+	_winner_id = 0;
+
+## Getter for the winner id
+func get_winner_id() -> int:
+	return _winner_id
+
+## Add multiple players to the score system, init value will be zero
+func register_players(in_players_id: Array[int]) -> void:
+	for id in in_players_id:
+		register_player(id)
+
+## Add a player to the score system, init value will be zero
+func register_player(in_player_id: int) -> void:
+	assert(_players_score.find_key(in_player_id) != null)
+	_players_score.get_or_add(in_player_id, 0)
+
+## Getter for the player score
+func get_player_score(in_player_id: int) -> int:
+	return _players_score[in_player_id]
+
+## Compare hit timings and determine the winner to increment the score by 1
+func increment_winner_score() -> void:
+	winner_reset()
 	for id in _players_score.keys():
-		if winner_id == id:
+		if _winner_id == id:
 			continue
 		
-		if _hit_system.get_player_hit(winner_id) > _hit_system.get_player_hit(id):
-			winner_id = id
+		if _hit_system.get_player_hit(_winner_id) > _hit_system.get_player_hit(id):
+			_winner_id = id
 	
-	_players_score[winner_id] += 1
+	_players_score[_winner_id] += 1

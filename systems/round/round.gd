@@ -43,6 +43,7 @@ enum State {
 
 ## Emit when the state has changed (requires an actual diff)
 signal state_changed(state: State)
+signal counter_changed(counter: int)
 
 var _timer: float = 0.0
 var _state: State = State.WAITING
@@ -93,6 +94,7 @@ func _update_state(in_state: State) -> void:
 
 	if _state == State.INTRO:
 		_counter += 1
+		counter_changed.emit(_counter)
 
 	_state = in_state
 	state_changed.emit(_state)

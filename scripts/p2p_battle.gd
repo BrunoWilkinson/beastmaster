@@ -14,6 +14,7 @@ var label: Label = null
 
 var hit_system: HitSystem = null
 var round_system: RoundSystem = null
+var score_system: ScoreSystem = null
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -22,13 +23,20 @@ func _ready() -> void:
 	round_system = $Round
 	round_system.setup(hit_system)
 	round_system.state_changed.connect(on_round_state_chaned)
+	round_system.counter_changed.connect(on_round_counter_changed)
+
+	score_system = $Score
+	score_system.setup(hit_system)
+	
+	for id in Lobby.players.keys():
+		score_system.register_player(id)
 
 	label = $Label
 	label.text = "WAITING"
 
 	$RoundNumber.text = "Round 1"
-	$Player1Score.text = "Player1 score: " + str(player1_score)
-	$Player2Score.text = "Player2 score: " + str(player2_score)
+	$Player1Score.text = "Player1 score: 0"
+	$Player2Score.text = "Player2 score: 0"
 
 	Lobby.player_loaded.rpc_id(1)
 
@@ -53,21 +61,20 @@ func on_round_state_chaned(state: RoundSystem.State) -> void:
 		label.text = "ROUND END"
 		_round_over()
 
+func on_round_counter_changed(counter: int) -> void:
+	_set_round_counter.rpc(counter)
+
 @rpc("call_local", "reliable")
 func _set_state(in_state: RoundSystem.State):
 	pass
 
 @rpc("call_local", "reliable")
 func _set_players_scores(in_player1_score: int, in_player2_score):
-	player1_score = in_player1_score
-	player2_score = in_player2_score
-	$Player1Score.text = "Player1 score: " + str(player1_score)
-	$Player2Score.text = "Player2 score: " + str(player2_score)
+	pass
 
 @rpc("call_local", "reliable")
-func _set_round_number(in_round_number: int):
-	round_number = in_round_number
-	$RoundNumber.text = "Round " + str(round_number)
+func _set_round_counter(in_round_counter: int):
+	$RoundNumber.text = "Round " + str(in_round_counter)
 
 @rpc("call_local", "reliable")
 func _reset_timer():
@@ -87,14 +94,13 @@ func _register_hit(in_timing: float):
 		hit_system.set_player_hit(1, in_timing)
 
 func _round_intro() -> void:
-	if round_number != 0:
+	if round_system.get_counter() != 0:
 		_reset_timer.rpc()
 		_reset_player_hit_timing.rpc()
 
-	round_number += 1
 	hit_system.generate_hit_timing()
 
-	_set_round_number.rpc(round_number)
+	_set_round_counter.rpc(round_system.get_counter())
 	#_set_state.rpc(state)
 
 func _round_battle():
@@ -102,17 +108,15 @@ func _round_battle():
 	# _set_state.rpc(state)
 
 func _round_over() -> void:
-	# Smaller results wins
-	if hit_system.get_player_hit(0) < hit_system.get_player_hit(1):
-		player1_score += 1
-		peer_id_winner = multiplayer.get_unique_id()
-	elif hit_system.get_player_hit(0) > hit_system.get_player_hit(1):
-		player2_score += 1
-		peer_id_winner = Lobby.players.keys()[0]
-	else:
-		# TODO: handle a tie use case
-		peer_id_winner = -1
-
+	score_system.increment_winner_score()
+	
+	for id in Lobby.players.keys():
+		var text: String = "Player" + str(id) + " score: " + str(score_system.get_player_score(id))
+		if id == 1:
+			$Player1Score.text = text
+		else:
+			$Player2Score.text = text
+	
 	_reset_timer.rpc()
-	_set_players_scores.rpc(player1_score, player2_score)
+	#_set_players_scores.rpc(player1_score, player2_score)
 	# _set_state.rpc(state)
