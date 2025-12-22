@@ -1,14 +1,7 @@
 extends Control
 
-# Design 
-@export var round_intro_wait_time := 2.0
-@export var round_end_wait_time := 4.0
-
 # Player options
 @export var rounds_to_win := 3
-
-# Multiplayer State
-var peer_id_winner := 0
 
 var label: Label = null
 
@@ -16,107 +9,115 @@ var hit_system: HitSystem = null
 var round_system: RoundSystem = null
 var score_system: ScoreSystem = null
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	hit_system = $Hit
 
 	round_system = $Round
 	round_system.setup(hit_system)
-	round_system.state_changed.connect(on_round_state_chaned)
+	round_system.state_changed.connect(on_round_state_changed)
 	round_system.counter_changed.connect(on_round_counter_changed)
 
 	score_system = $Score
 	score_system.setup(hit_system)
+	score_system.state_changed.connect(on_score_state_changed)
 	
-	for id in Lobby.players.keys():
+	for id in Lobby.players:
 		score_system.register_player(id)
+		hit_system.register_player(id)
 
 	label = $Label
-	label.text = "WAITING"
+	on_round_state_changed(round_system.get_state())
 
-	$RoundNumber.text = "Round 1"
+	$RoundNumber.visible = false
 	$Player1Score.text = "Player1 score: 0"
 	$Player2Score.text = "Player2 score: 0"
 
+	if multiplayer.is_server():
+		Lobby.player_sync_changed.connect(_on_player_sync_changed)
+
 	Lobby.player_loaded.rpc_id(1)
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("hit") && round_system.get_state() == RoundSystem.State.BATTLE:
-		print("HIT!")
 		_register_hit.rpc_id(1, round_system.get_timer())
+
+func _on_player_sync_changed() -> void:
+	print("Server waiting on player sync")
+	if Lobby.has_players_finished_syncing():
+		print("Server resuming")
+		_set_round_state.rpc(RoundSystem.State.RESUME)
 
 func start_game() -> void:
 	if multiplayer.is_server():
-		_round_intro()
+		_set_round_state.rpc(RoundSystem.State.INTRO)
 
-func on_round_state_chaned(state: RoundSystem.State) -> void:
+func on_round_state_changed(state: RoundSystem.State) -> void:
+	print("on_round_state_changed: " + str(state) + " - id: " + str(multiplayer.get_unique_id()))
 	if state == RoundSystem.State.INTRO:
-		label.text = "ROUND INTRO"
+		label.text = "INTRO"
+		score_system.update_score()
+		hit_system.reset()
 		_round_intro()
 	elif state == RoundSystem.State.BATTLE:
 		label.text = "BATTLE"
-		_round_battle()
+	elif state == RoundSystem.State.WAITING:
+		label.text = "WAITING"
 	elif state == RoundSystem.State.END:
-		label.text = "ROUND END"
+		label.text = "END"
 		_round_over()
 
+func on_score_state_changed(state: ScoreSystem.State) -> void:
+	if state == ScoreSystem.State.WIN:
+		for id in Lobby.players:
+			var text: String = "Player" + str(id) + " score: " + str(score_system.get_player_score(id))
+			print(text)
+			if id == 1:
+				$Player1Score.text = text
+			else:
+				$Player2Score.text = text
+	if state == ScoreSystem.State.TIE:
+		print("on_score_state_changed() - TIE")
+
 func on_round_counter_changed(counter: int) -> void:
-	_set_round_counter.rpc(counter)
+	if !$RoundNumber.visible:
+		$RoundNumber.visible = true
+	$RoundNumber.text = "Round " + str(counter)
 
 @rpc("call_local", "reliable")
-func _set_state(in_state: RoundSystem.State):
-	pass
+func _set_round_state(in_round_state: RoundSystem.State) -> void:
+	round_system.set_state(in_round_state)
 
-@rpc("call_local", "reliable")
-func _set_players_scores(in_player1_score: int, in_player2_score):
-	pass
+@rpc("call_remote", "reliable")
+func _sync_hit_timing(in_hit_timing: float) -> void:
+	hit_system.set_hit_timing(in_hit_timing)
+	Lobby.sync_done.rpc_id(1)
 
-@rpc("call_local", "reliable")
-func _set_round_counter(in_round_counter: int):
-	$RoundNumber.text = "Round " + str(in_round_counter)
-
-@rpc("call_local", "reliable")
-func _reset_timer():
-	round_system.reset()
-
-@rpc("call_local", "reliable")
-func _reset_player_hit_timing():
-	hit_system.reset()
+@rpc("call_remote", "reliable")
+func _sync_players_hit_timing(in_players_hit_timing: Dictionary[int, float]) -> void:
+	hit_system.set_players_hit_timing(in_players_hit_timing)
+	Lobby.sync_done.rpc_id(1)
 
 @rpc("any_peer", "call_local", "reliable")
-func _register_hit(in_timing: float):
+func _register_hit(in_timing: float) -> void:
 	var sender_id = multiplayer.get_remote_sender_id()
-	print(str(sender_id))
-	if sender_id == 1:
-		hit_system.set_player_hit(0, in_timing)
-	else:
-		hit_system.set_player_hit(1, in_timing)
+	print("Hit registered - id: " + str(sender_id))
+	hit_system.set_player_hit(sender_id, in_timing)
 
 func _round_intro() -> void:
-	if round_system.get_counter() != 0:
-		_reset_timer.rpc()
-		_reset_player_hit_timing.rpc()
+	if !multiplayer.is_server():
+		return
+
+	_set_round_state.rpc(RoundSystem.State.WAITING)
+	Lobby.set_players_syncing()
 
 	hit_system.generate_hit_timing()
-
-	_set_round_counter.rpc(round_system.get_counter())
-	#_set_state.rpc(state)
-
-func _round_battle():
-	_reset_timer.rpc()
-	# _set_state.rpc(state)
+	_sync_hit_timing.rpc(hit_system.get_hit_timing())
 
 func _round_over() -> void:
-	score_system.increment_winner_score()
-	
-	for id in Lobby.players.keys():
-		var text: String = "Player" + str(id) + " score: " + str(score_system.get_player_score(id))
-		if id == 1:
-			$Player1Score.text = text
-		else:
-			$Player2Score.text = text
-	
-	_reset_timer.rpc()
-	#_set_players_scores.rpc(player1_score, player2_score)
-	# _set_state.rpc(state)
+	if !multiplayer.is_server():
+		return
+
+	_set_round_state.rpc(RoundSystem.State.WAITING)
+	Lobby.set_players_syncing()
+
+	_sync_players_hit_timing.rpc(hit_system.get_players_hit_timing())

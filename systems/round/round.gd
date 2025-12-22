@@ -31,13 +31,15 @@ extends Node
 
 ## Round State
 enum State {
-	## Round Introduction
+	## Set player score and increment round
 	INTRO,
-	## Round Battle
+	## Player can register hits
 	BATTLE,
-	## Round Ending
+	## Figure out the winner
 	END,
-	## Pending state - Default
+	## Resume from state before waiting
+	RESUME,
+	## Waiting for the clients - Default
 	WAITING
 }
 
@@ -47,13 +49,14 @@ signal counter_changed(counter: int)
 
 var _timer: float = 0.0
 var _state: State = State.WAITING
+var _wait_state: State = State.WAITING
 var _counter := 0
 
 var _hit_system: HitSystem = null
 
 ## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
 func setup(in_hit_system: HitSystem) -> void:
-	assert(_hit_system != null)
+	assert(_hit_system == null)
 	_hit_system = in_hit_system
 
 ## Set values back to their init state [br] 
@@ -61,6 +64,15 @@ func setup(in_hit_system: HitSystem) -> void:
 func reset():
 	_timer = 0.0
 	_state = State.WAITING
+	_wait_state = State.WAITING
+
+## Getter to prev state
+func get_wait_state() -> State:
+	return _wait_state
+
+## Setter to override the current state
+func set_state(in_state: State) -> void:
+	_update_state(in_state)
 
 ## Getter for the current round state
 func get_state() -> State:
@@ -76,7 +88,8 @@ func get_counter() -> int:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if _hit_system == null || _state == State.WAITING:
+	assert(_hit_system != null)
+	if _state == State.WAITING || _state == State.RESUME:
 		return
 
 	_timer += delta
@@ -92,9 +105,21 @@ func _update_state(in_state: State) -> void:
 	if (_state == in_state):
 		return
 
+	if in_state == State.WAITING:
+		_wait_state = _state
+		_state = in_state
+		return
+
+	if in_state == State.RESUME:
+		_state = _wait_state
+		_wait_state = State.WAITING
+		return
+
+	_state = in_state
+	_timer = 0
+	
 	if _state == State.INTRO:
 		_counter += 1
 		counter_changed.emit(_counter)
 
-	_state = in_state
 	state_changed.emit(_state)

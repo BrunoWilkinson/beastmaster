@@ -6,6 +6,7 @@ signal player_connected(peer_id: int, player_info: Dictionary[String, Variant])
 signal player_disconnected(peer_id: int)
 signal player_list_set()
 signal server_disconnected
+signal player_sync_changed()
 
 const PORT: int = 7000
 const DEFAULT_SERVER_IP: String = "127.0.0.1" # IPv4 localhost
@@ -69,14 +70,14 @@ func player_ready() -> void:
 	_set_players.rpc(players)
 	
 func can_start_game() -> bool:
-	var all_player_ready := false
+	var result := false
 	
 	if players.size() <= 1:
-		return all_player_ready
+		return result
 	
-	for key in players.keys():
-		all_player_ready = players[key]["IsReady"]
-	return all_player_ready
+	for id in players:
+		result = players[id]["IsReady"]
+	return result
 	
 # Every peer will call this when they have loaded the game scene.
 @rpc("any_peer", "call_local", "reliable")
@@ -90,12 +91,37 @@ func player_loaded() -> void:
 	_set_players(players)
 
 	var players_loaded: int = 0
-	for key in players.keys():
-		if players[key]["HasLoaded"]:
+	for id in players:
+		if players[id]["HasLoaded"]:
 			players_loaded += 1
 
 	if players_loaded == players.size():
 		$/root/Game.start_game()
+
+@rpc("any_peer", "call_remote", "reliable")
+func sync_done() -> void:
+	if !multiplayer.is_server():
+		return
+	
+	var peer_id := multiplayer.get_remote_sender_id()
+	players[peer_id]["Syncing"] = false
+	player_sync_changed.emit()
+
+func set_players_syncing() -> void:
+	for id in players:
+		if multiplayer.get_unique_id() == id:
+			continue
+		players[id]["Syncing"] = true
+
+func has_players_finished_syncing() -> bool:
+	var result := false
+
+	if players.size() <= 1:
+		return result
+
+	for id in players:
+		result = !players[id]["Syncing"]
+	return result
 
 @rpc("call_local", "reliable")
 func _set_players(in_players: Dictionary[int, Dictionary]):
@@ -136,5 +162,6 @@ func _default_value_player_info() -> Dictionary[String, Variant]:
 	return {
 		"Name": "Player",
 		"IsReady": false,
-		"HasLoaded": false
+		"HasLoaded": false,
+		"Syncing": false,
 	}	

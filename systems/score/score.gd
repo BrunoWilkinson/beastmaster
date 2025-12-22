@@ -24,22 +24,27 @@ extends Node
 ##     round_system.setup(hit_system)
 ## [/codeblock]
 
+## Score State
+enum State {
+	## A player as won
+	WIN,
+	## Either no one has press or all players have the same timing
+	TIE,
+	## Default state
+	NONE
+}
+
+## Emit when the score gets updated
+signal state_changed(state: State)
+
 var _players_score: Dictionary[int, int]
-var _winner_id: int = 0
 var _hit_system: HitSystem = null
+var _state: State = State.NONE
 
 ## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
 func setup(in_hit_system: HitSystem) -> void:
-	assert(_hit_system != null)
+	assert(_hit_system == null)
 	_hit_system = in_hit_system
-
-## Set the internal winner id back to init value which is zero
-func winner_reset() -> void:
-	_winner_id = 0;
-
-## Getter for the winner id
-func get_winner_id() -> int:
-	return _winner_id
 
 ## Add multiple players to the score system, init value will be zero
 func register_players(in_players_id: Array[int]) -> void:
@@ -48,21 +53,25 @@ func register_players(in_players_id: Array[int]) -> void:
 
 ## Add a player to the score system, init value will be zero
 func register_player(in_player_id: int) -> void:
-	assert(_players_score.find_key(in_player_id) != null)
+	assert(_players_score.find_key(in_player_id) == null)
 	_players_score.get_or_add(in_player_id, 0)
 
 ## Getter for the player score
 func get_player_score(in_player_id: int) -> int:
 	return _players_score[in_player_id]
 
-## Compare hit timings and determine the winner to increment the score by 1
-func increment_winner_score() -> void:
-	winner_reset()
-	for id in _players_score.keys():
-		if _winner_id == id:
-			continue
-		
-		if _hit_system.get_player_hit(_winner_id) > _hit_system.get_player_hit(id):
-			_winner_id = id
+## Compare hit timings and determine if it's a TIE or WIN [br]
+## This func will emit the state_changed signal
+func update_score() -> void:
+	assert(_players_score.size() > 0)
 	
-	_players_score[_winner_id] += 1
+	if _hit_system.is_tie():
+		_update_state(State.TIE)
+		return
+	
+	_players_score[_hit_system.find_lowest_hit_id()] += 1
+	_update_state(State.WIN)
+
+func _update_state(in_state: State) -> void:
+	_state = in_state
+	state_changed.emit(_state)
