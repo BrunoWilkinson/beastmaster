@@ -34,6 +34,9 @@ func _ready() -> void:
 
 	if multiplayer.is_server():
 		Lobby.player_sync_changed.connect(_on_player_sync_changed)
+		$Type.text = "Server"
+	else:
+		$Type.text = "Client"
 
 	Lobby.player_loaded.rpc_id(1)
 
