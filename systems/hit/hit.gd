@@ -29,6 +29,9 @@ extends Node
 ## Highest value possible while generating the hit time
 @export var max_timing := 1.5
 
+## Emit a signal when all players have pressed the hit input
+signal all_player_registered_hits()
+
 var _hit_timing := 0.0
 var _players_hit_timing: Dictionary[int, float]
 
@@ -47,6 +50,8 @@ func register_players(in_players_id: Array[int]) -> void:
 func register_player(in_player_id: int) -> void:
 	assert(_players_hit_timing.find_key(in_player_id) == null)
 	_players_hit_timing.get_or_add(in_player_id, 0)
+	if has_all_player_registered_hits():
+		all_player_registered_hits.emit()
 
 ## Set the internal values to zero
 func reset() -> void:

@@ -74,8 +74,8 @@ grow_horizontal = 0
 text = "Player2 Score: -1"
 
 [node name="Hit" parent="." instance=ExtResource("2_1h640")]
-min_timing = 2.0
-max_timing = 2.0
+min_timing = 2.5
+max_timing = 3.0
 
 [node name="Round" parent="." instance=ExtResource("3_1mmmy")]
 

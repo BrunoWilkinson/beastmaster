@@ -47,22 +47,27 @@ enum State {
 signal state_changed(state: State)
 signal counter_changed(counter: int)
 
-var _timer: float = 0.0
 var _state: State = State.WAITING
 var _wait_state: State = State.WAITING
 var _counter := 0
 
 var _hit_system: HitSystem = null
+var _timer: Timer = null
 
 ## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
 func setup(in_hit_system: HitSystem) -> void:
 	assert(_hit_system == null)
 	_hit_system = in_hit_system
+	_hit_system.all_player_registered_hits.connect(_on_all_player_registered_hits)
+	
+	_timer = Timer.new()
+	_timer.set_one_shot(true)
+	_timer.timeout.connect(_on_timeout)
+	get_parent().add_child(_timer)
 
 ## Set values back to their init state [br] 
 ## [color=lightblue]Info:[/color] Expect for the [HitSystem] ref (it won't set to null)
 func reset():
-	_timer = 0.0
 	_state = State.WAITING
 	_wait_state = State.WAITING
 
@@ -79,29 +84,30 @@ func get_state() -> State:
 	return _state
 
 ## Getter for the current round timer
-func get_timer() -> float:
+func get_timer() -> Timer:
 	return _timer
 
 ## Getter for the current round number
 func get_counter() -> int:
 	return _counter
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _on_timeout() -> void:
 	assert(_hit_system != null)
-	if _state == State.WAITING || _state == State.RESUME:
-		return
 
-	_timer += delta
-
-	if _state == State.INTRO && _timer >= intro_duration:
+	if _state == State.INTRO:
 		_update_state(State.BATTLE)
-	elif _state == State.BATTLE && (_timer >= _hit_system.get_hit_timing() || _hit_system.has_all_player_registered_hits()):
+	elif _state == State.BATTLE:
 		_update_state(State.END)
-	elif _state == State.END && _timer >= end_duration:
+	elif _state == State.END:
 		_update_state(State.INTRO)
 
+func _on_all_player_registered_hits() -> void:
+	if _state == State.BATTLE:
+		_update_state(State.END)
+
 func _update_state(in_state: State) -> void:
+	assert(_timer != null)
+
 	if (_state == in_state):
 		return
 
@@ -116,10 +122,15 @@ func _update_state(in_state: State) -> void:
 		return
 
 	_state = in_state
-	_timer = 0
-	
+
 	if _state == State.INTRO:
+		_timer.set_wait_time(intro_duration)
 		_counter += 1
 		counter_changed.emit(_counter)
+	elif _state == State.BATTLE:
+		_timer.set_wait_time(_hit_system.get_hit_timing())
+	elif _state == State.END:
+		_timer.set_wait_time(end_duration)
 
+	_timer.start()
 	state_changed.emit(_state)
