@@ -1,4 +1,4 @@
-extends Control
+extends Node
 
 # Player options
 @export var rounds_to_win := 3
@@ -25,18 +25,21 @@ func _ready() -> void:
 		score_system.register_player(id)
 		hit_system.register_player(id)
 
-	label = $Label
+	label = $HUD/Label
 	on_round_state_changed(round_system.get_state())
 
-	$RoundNumber.visible = false
-	$Player1Score.text = "Player1 score: 0"
-	$Player2Score.text = "Player2 score: 0"
-
+	$HUD/RoundNumber.visible = false
+	$HUD/Player1Score.text = "Player1 score: 0"
+	$HUD/Player2Score.text = "Player2 score: 0"
+	
+	$Player1.play()
+	$Player2.play()
+	
 	if multiplayer.is_server():
 		Lobby.player_sync_changed.connect(_on_player_sync_changed)
-		$Type.text = "Server"
+		$HUD/Type.text = "Server"
 	else:
-		$Type.text = "Client"
+		$HUD/Type.text = "Client"
 
 	Lobby.player_loaded.rpc_id(1)
 
@@ -71,17 +74,17 @@ func on_score_state_changed(state: ScoreSystem.State) -> void:
 		for id in Lobby.players:
 			var text: String = "Player" + str(id) + " score: " + str(score_system.get_player_score(id))
 			if id == 1:
-				$Player1Score.text = text
+				$HUD/Player1Score.text = text
 			else:
-				$Player2Score.text = text
+				$HUD/Player2Score.text = text
 	if state == ScoreSystem.State.TIE:
 		## TODO: Update the UI scene nodes instead of printing
 		print("on_score_state_changed() - TIE")
 
 func on_round_counter_changed(counter: int) -> void:
-	if !$RoundNumber.visible:
-		$RoundNumber.visible = true
-	$RoundNumber.text = "Round " + str(counter)
+	if !$HUD/RoundNumber.visible:
+		$HUD/RoundNumber.visible = true
+	$HUD/RoundNumber.text = "Round " + str(counter)
 
 @rpc("call_local", "reliable")
 func _set_round_state(in_round_state: RoundSystem.State) -> void:
