@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ScoreSystem" load_steps=3 format=3 uid="uid://dqs0pbaio1t1m"]
+
+[ext_resource type="Resource" uid="uid://so7hrtixn1m" path="res://systems/hit/hit.tres" id="1_521dh"]
+[ext_resource type="Script" uid="uid://dmjjgcjsle22m" path="res://systems/score/score.gd" id="1_i8p1u"]
+
+[resource]
+script = ExtResource("1_i8p1u")
+_hit_system = ExtResource("1_521dh")
+metadata/_custom_type_script = "uid://dmjjgcjsle22m"

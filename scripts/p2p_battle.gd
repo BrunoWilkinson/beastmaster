@@ -4,9 +4,9 @@ extends Node
 @export var rounds_to_win := 3
 
 # Systems
-var hit_system: HitSystem = null
+@export var hit_system: HitSystem = null
+@export var score_system: ScoreSystem = null
 var round_system: RoundSystem = null
-var score_system: ScoreSystem = null
 
 # Sprites
 var player1: AnimatedSprite2D = null
@@ -26,18 +26,14 @@ var debug_round_state: Label = null
 var debug_type: Label = null
 
 func _ready() -> void:
-	hit_system = $Hit
 	assert(hit_system != null)
-
+	assert(score_system != null)
+	
 	round_system = $Round
 	assert(round_system != null)
-	round_system.setup(hit_system)
+	
 	round_system.state_changed.connect(on_round_state_changed)
 	round_system.counter_changed.connect(on_round_counter_changed)
-
-	score_system = $Score
-	assert(score_system != null)
-	score_system.setup(hit_system)
 	score_system.state_changed.connect(on_score_state_changed)
 	
 	# register players into the systems

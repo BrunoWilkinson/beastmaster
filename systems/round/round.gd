@@ -10,24 +10,17 @@ extends Node
 ## [codeblock]
 ## round_system: RoundSystem = null
 ## func _ready():
+##     # The hit system ref should be passed in via inspector
 ##     round_system = $RoundSystem
-##     # CRITICAL: Mandatory to pass a ref to the hit timing system
-##     round_system.setup(hit_system)
 ## [/codeblock]
 ## [br]
-## Usage without node:
-## [codeblock]
-## hit_system: HitSystem = null
-## func _ready():
-##     round_system = HitSystem.new()
-##     # CRITICAL: Mandatory to pass a ref to the hit timing system
-##     round_system.setup(hit_system)
-## [/codeblock]
 
 ## How long the round intro will last
 @export var intro_duration := 2.0
 ## How long the round end will last
 @export var end_duration := 4.0
+## Ref to the hit system resource
+@export var _hit_system: HitSystem = null
 
 ## Round State
 enum State {
@@ -51,19 +44,17 @@ var _state: State = State.WAITING
 var _wait_state: State = State.WAITING
 var _counter := 0
 
-var _hit_system: HitSystem = null
+
 var _timer: Timer = null
 
-## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
-func setup(in_hit_system: HitSystem) -> void:
-	assert(_hit_system == null)
-	_hit_system = in_hit_system
+func _ready() -> void:
+	assert(_hit_system != null)
 	_hit_system.all_player_registered_hits.connect(_on_all_player_registered_hits)
 	
 	_timer = Timer.new()
 	_timer.set_one_shot(true)
 	_timer.timeout.connect(_on_timeout)
-	get_parent().add_child(_timer)
+	get_parent().add_child.call_deferred(_timer)
 
 ## Set values back to their init state [br] 
 ## [color=lightblue]Info:[/color] Expect for the [HitSystem] ref (it won't set to null)

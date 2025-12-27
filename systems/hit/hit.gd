@@ -1,28 +1,9 @@
+extends Resource
 class_name HitSystem
-extends Node
 ## Handles hit timings
 ##
 ## Allow to generate hit timing for the players,
-## and store them to be used by other systems.[br]
-## [br]
-## Usage with node:
-## [codeblock]
-## hit_system: HitSystem = null
-## func _ready():
-##     hit_system = $Hit
-##     # if we need to override the default values
-##     hit_system.setup(1, 2)
-##     # OR can be updated directly in the editor using the node in the scene
-## [/codeblock]
-## [br]
-## Usage without node:
-## [codeblock]
-## hit_system: HitSystem = null
-## func _ready():
-##     hit_system = HitSystem.new()
-##     # if we need to override the default values
-##     hit_system.setup(1, 2)
-## [/codeblock]
+## and store them to be used by other systems.
 
 ## Lowest value possible while generating the hit time
 @export var min_timing := 0.5

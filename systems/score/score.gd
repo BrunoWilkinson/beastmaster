@@ -1,28 +1,13 @@
+extends Resource
 class_name ScoreSystem
-extends Node
 ## Score management
 ## 
 ## [color=Orange]Dependency:[/color] Requires [HitSystem] [br][br]
 ## Update the round state based on values given, 
-## and emit those update to other systems.[br]
-## [br]
-## Usage with node:
-## [codeblock]
-## score_system: ScoreSystem = null
-## func _ready():
-##     score_system = $Score
-##     # CRITICAL: Mandatory to pass a ref to the hit timing system
-##     round_system.setup(hit_system)
-## [/codeblock]
-## [br]
-## Usage without node:
-## [codeblock]
-## score_system: ScoreSystem = null
-## func _ready():
-##     round_system = ScoreSystem.new()
-##     # CRITICAL: Mandatory to pass a ref to the hit timing system
-##     round_system.setup(hit_system)
-## [/codeblock]
+## and emit those update to other systems.
+
+## Ref to the hit system resource
+@export var _hit_system: HitSystem = null
 
 ## Score State
 enum State {
@@ -38,14 +23,12 @@ enum State {
 signal state_changed(state: State)
 
 var _players_score: Dictionary[int, int]
-var _hit_system: HitSystem = null
+
 var _state: State = State.NONE
 var _winner_id: int = -1
 
-## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
-func setup(in_hit_system: HitSystem) -> void:
-	assert(_hit_system == null)
-	_hit_system = in_hit_system
+func _setup_local_to_scene() -> void:
+	assert(_hit_system != null)
 
 ## Add multiple players to the score system, init value will be zero
 func register_players(in_players_id: Array[int]) -> void:

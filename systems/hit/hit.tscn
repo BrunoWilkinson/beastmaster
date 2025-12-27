@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bw75ima2et0so"]
-
-[ext_resource type="Script" uid="uid://tmrhp5edu1pp" path="res://systems/hit/hit.gd" id="1_u2em8"]
-
-[node name="Hit" type="Node"]
-script = ExtResource("1_u2em8")
