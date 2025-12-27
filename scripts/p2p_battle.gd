@@ -3,43 +3,69 @@ extends Node
 # Player options
 @export var rounds_to_win := 3
 
-var label: Label = null
-
+# Systems
 var hit_system: HitSystem = null
 var round_system: RoundSystem = null
 var score_system: ScoreSystem = null
 
+# Sprites
+var player1: AnimatedSprite2D = null
+var player2: AnimatedSprite2D = null
+
+# HUD
+var round_number: Label = null
+var player1_score: Label = null
+var player2_score: Label = null
+
+# Debug Labels
+var debug_round_state: Label = null
+var debug_type: Label = null
+
 func _ready() -> void:
 	hit_system = $Hit
+	assert(hit_system != null)
 
 	round_system = $Round
+	assert(round_system != null)
 	round_system.setup(hit_system)
 	round_system.state_changed.connect(on_round_state_changed)
 	round_system.counter_changed.connect(on_round_counter_changed)
 
 	score_system = $Score
+	assert(score_system != null)
 	score_system.setup(hit_system)
 	score_system.state_changed.connect(on_score_state_changed)
 	
+	# register players into the systems
 	for id in Lobby.players:
 		score_system.register_player(id)
 		hit_system.register_player(id)
+	
+	round_number = $HUD/RoundNumber
+	round_number.visible = false
+	
+	player1_score = $HUD/Player1Score
+	player1_score.text = "Player1 score: 0"
+	
+	player2_score = $HUD/Player2Score
+	player2_score.text = "Player2 score: 0"
+	
+	player1 = $Player1
+	assert(player1 != null)
+	player2 = $Player2
+	assert(player2 != null)
+	
+	debug_round_state = $HUD/RoundState
+	assert(debug_round_state != null)
+	debug_type = $HUD/Type
+	assert(debug_type != null)
 
-	label = $HUD/Label
 	on_round_state_changed(round_system.get_state())
-
-	$HUD/RoundNumber.visible = false
-	$HUD/Player1Score.text = "Player1 score: 0"
-	$HUD/Player2Score.text = "Player2 score: 0"
-	
-	$Player1.play()
-	$Player2.play()
-	
 	if multiplayer.is_server():
 		Lobby.player_sync_changed.connect(_on_player_sync_changed)
-		$HUD/Type.text = "Server"
+		debug_type.text = "Server"
 	else:
-		$HUD/Type.text = "Client"
+		debug_type.text = "Client"
 
 	Lobby.player_loaded.rpc_id(1)
 
@@ -56,35 +82,39 @@ func start_game() -> void:
 		_set_round_state.rpc(RoundSystem.State.INTRO)
 
 func on_round_state_changed(state: RoundSystem.State) -> void:
+	
 	if state == RoundSystem.State.INTRO:
-		label.text = "INTRO"
+		debug_round_state.text = "intro"
 		score_system.update_score()
 		hit_system.reset()
 		_round_intro()
 	elif state == RoundSystem.State.BATTLE:
-		label.text = "BATTLE"
+		debug_round_state.text = "battle"
 	elif state == RoundSystem.State.WAITING:
-		label.text = "WAITING"
+		debug_round_state.text = "waiting"
 	elif state == RoundSystem.State.END:
-		label.text = "END"
+		debug_round_state.text = "end"
 		_round_over()
+	elif state == RoundSystem.State.RESUME:
+		debug_round_state.text = "resume"
+	elif state == RoundSystem.State.WAITING:
+		debug_round_state.text = "waiting"
 
 func on_score_state_changed(state: ScoreSystem.State) -> void:
 	if state == ScoreSystem.State.WIN:
 		for id in Lobby.players:
-			var text: String = "Player" + str(id) + " score: " + str(score_system.get_player_score(id))
 			if id == 1:
-				$HUD/Player1Score.text = text
+				player1_score.text = _generate_score_text(id, 1)
 			else:
-				$HUD/Player2Score.text = text
+				player2_score.text = _generate_score_text(id, 2)
 	if state == ScoreSystem.State.TIE:
 		## TODO: Update the UI scene nodes instead of printing
 		print("on_score_state_changed() - TIE")
 
 func on_round_counter_changed(counter: int) -> void:
-	if !$HUD/RoundNumber.visible:
-		$HUD/RoundNumber.visible = true
-	$HUD/RoundNumber.text = "Round " + str(counter)
+	if !round_number.visible:
+		round_number.visible = true
+	round_number.text = "Round " + str(counter)
 
 @rpc("call_local", "reliable")
 func _set_round_state(in_round_state: RoundSystem.State) -> void:
@@ -123,3 +153,6 @@ func _round_over() -> void:
 func _sync_players() -> void:
 	_set_round_state.rpc(RoundSystem.State.WAITING)
 	Lobby.set_players_syncing()
+
+func _generate_score_text(in_player_id: int, in_player_number: int) -> String:
+	return "Player" + str(in_player_number) + " score: " + str(score_system.get_player_score(in_player_id))
