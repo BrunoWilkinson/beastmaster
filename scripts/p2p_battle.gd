@@ -12,10 +12,14 @@ var score_system: ScoreSystem = null
 var player1: AnimatedSprite2D = null
 var player2: AnimatedSprite2D = null
 
+# Sound
+var hit_sound: AudioStreamPlayer = null
+
 # HUD
 var round_number: Label = null
 var player1_score: Label = null
 var player2_score: Label = null
+var hit_indicator: ColorRect = null
 
 # Debug Labels
 var debug_round_state: Label = null
@@ -59,6 +63,13 @@ func _ready() -> void:
 	assert(debug_round_state != null)
 	debug_type = $HUD/Type
 	assert(debug_type != null)
+	
+	hit_indicator = $HUD/HitIndicator
+	assert(hit_indicator != null)
+	hit_indicator.visible = false
+
+	hit_sound = $HitSound
+	assert(hit_sound != null)
 
 	on_round_state_changed(round_system.get_state())
 	if multiplayer.is_server():
@@ -85,20 +96,21 @@ func start_game() -> void:
 
 func on_round_state_changed(state: RoundSystem.State) -> void:
 	if state == RoundSystem.State.INTRO:
+		hit_indicator.visible = false
 		debug_round_state.text = "intro"
 		hit_system.reset()
 		_round_intro()
 	elif state == RoundSystem.State.BATTLE:
+		hit_indicator.visible = true
+		hit_sound.play()
 		debug_round_state.text = "battle"
 	elif state == RoundSystem.State.WAITING:
+		hit_indicator.visible = false
 		debug_round_state.text = "waiting"
 	elif state == RoundSystem.State.END:
+		hit_indicator.visible = false
 		debug_round_state.text = "end"
 		_round_over()
-	elif state == RoundSystem.State.RESUME:
-		debug_round_state.text = "resume"
-	elif state == RoundSystem.State.WAITING:
-		debug_round_state.text = "waiting"
 
 func on_score_state_changed(state: ScoreSystem.State) -> void:
 	if state == ScoreSystem.State.WIN:

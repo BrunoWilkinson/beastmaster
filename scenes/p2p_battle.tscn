@@ -1,11 +1,12 @@
-[gd_scene load_steps=46 format=3 uid="uid://fqvvkgx7l53v"]
+[gd_scene load_steps=47 format=3 uid="uid://fqvvkgx7l53v"]
 
 [ext_resource type="Script" uid="uid://dv23my4vy8yfg" path="res://scripts/p2p_battle.gd" id="1_o8nfj"]
 [ext_resource type="PackedScene" uid="uid://bw75ima2et0so" path="res://systems/hit/hit.tscn" id="2_1h640"]
 [ext_resource type="PackedScene" uid="uid://qblyv7e42iih" path="res://systems/round/round.tscn" id="3_1mmmy"]
 [ext_resource type="PackedScene" uid="uid://e4wbtp33lkk" path="res://systems/score/score.tscn" id="4_flu4c"]
-[ext_resource type="Texture2D" uid="uid://dxxeiptklsadk" path="res://assets/player_idle.png" id="5_h4522"]
-[ext_resource type="Texture2D" uid="uid://ocxxu2ehb7t7" path="res://assets/player_death.png" id="5_otfso"]
+[ext_resource type="Texture2D" uid="uid://dxxeiptklsadk" path="res://assets/sprites/player_idle.png" id="5_h4522"]
+[ext_resource type="Texture2D" uid="uid://ocxxu2ehb7t7" path="res://assets/sprites/player_death.png" id="5_otfso"]
+[ext_resource type="AudioStream" uid="uid://bc18ndinjry0t" path="res://assets/sounds/hit_sound.wav" id="7_j0p04"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_83gd0"]
 atlas = ExtResource("5_otfso")
@@ -358,9 +359,36 @@ offset_bottom = 23.0
 grow_horizontal = 0
 text = "Player2 Score: -1"
 
+[node name="HitIndicator" type="ColorRect" parent="HUD"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -97.5
+offset_top = -58.75
+offset_right = 97.5
+offset_bottom = 58.75
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.26999998, 0.26999998, 1)
+
+[node name="Label" type="Label" parent="HUD/HitIndicator"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 72
+text = "HIT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Hit" parent="." instance=ExtResource("2_1h640")]
-min_timing = 2.5
-max_timing = 3.0
+min_timing = 1.5
+max_timing = 2.5
 
 [node name="Round" parent="." instance=ExtResource("3_1mmmy")]
 
@@ -377,3 +405,7 @@ position = Vector2(949, 329)
 sprite_frames = SubResource("SpriteFrames_83gd0")
 animation = &"idle"
 autoplay = "idle"
+
+[node name="HitSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_j0p04")
+volume_db = -5.0
