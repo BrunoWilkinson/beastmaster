@@ -40,6 +40,7 @@ signal state_changed(state: State)
 var _players_score: Dictionary[int, int]
 var _hit_system: HitSystem = null
 var _state: State = State.NONE
+var _winner_id: int = -1
 
 ## [color=red]Critical:[/color] Mandatory to pass a ref to the hit timing system
 func setup(in_hit_system: HitSystem) -> void:
@@ -60,6 +61,10 @@ func register_player(in_player_id: int) -> void:
 func get_player_score(in_player_id: int) -> int:
 	return _players_score[in_player_id]
 
+## Getter for the winner player id
+func get_winner_id() -> int:
+	return _winner_id
+
 ## Compare hit timings and determine if it's a TIE or WIN [br]
 ## This func will emit the state_changed signal
 func update_score() -> void:
@@ -69,7 +74,8 @@ func update_score() -> void:
 		_update_state(State.TIE)
 		return
 	
-	_players_score[_hit_system.find_lowest_hit_id()] += 1
+	_winner_id = _hit_system.find_lowest_hit_id()
+	_players_score[_winner_id] += 1
 	_update_state(State.WIN)
 
 func _update_state(in_state: State) -> void:

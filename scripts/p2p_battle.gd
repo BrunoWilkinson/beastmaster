@@ -76,16 +76,16 @@ func _process(_delta: float) -> void:
 func _on_player_sync_changed() -> void:
 	if Lobby.has_players_finished_syncing():
 		_set_round_state.rpc(RoundSystem.State.RESUME)
+		if round_system.get_state() == RoundSystem.State.END:
+			score_system.update_score()
 
 func start_game() -> void:
 	if multiplayer.is_server():
 		_set_round_state.rpc(RoundSystem.State.INTRO)
 
 func on_round_state_changed(state: RoundSystem.State) -> void:
-	
 	if state == RoundSystem.State.INTRO:
 		debug_round_state.text = "intro"
-		score_system.update_score()
 		hit_system.reset()
 		_round_intro()
 	elif state == RoundSystem.State.BATTLE:
@@ -102,11 +102,13 @@ func on_round_state_changed(state: RoundSystem.State) -> void:
 
 func on_score_state_changed(state: ScoreSystem.State) -> void:
 	if state == ScoreSystem.State.WIN:
-		for id in Lobby.players:
-			if id == 1:
-				player1_score.text = _generate_score_text(id, 1)
-			else:
-				player2_score.text = _generate_score_text(id, 2)
+		var winner_id := score_system.get_winner_id()
+		if winner_id == 1:
+			player1_score.text = "Player1 score: " + str(score_system.get_player_score(winner_id))
+			player2.play("death")
+		else:
+			player2_score.text = "Player2 score: " + str(score_system.get_player_score(winner_id))
+			player1.play("death")
 	if state == ScoreSystem.State.TIE:
 		## TODO: Update the UI scene nodes instead of printing
 		print("on_score_state_changed() - TIE")
@@ -128,6 +130,7 @@ func _sync_hit_timing(in_hit_timing: float) -> void:
 @rpc("call_remote", "reliable")
 func _sync_players_hit_timing(in_players_hit_timing: Dictionary[int, float]) -> void:
 	hit_system.set_players_hit_timing(in_players_hit_timing)
+	score_system.update_score()
 	Lobby.sync_done.rpc_id(1)
 
 @rpc("any_peer", "call_local", "reliable")
@@ -136,6 +139,9 @@ func _register_hit(in_timing: float) -> void:
 	hit_system.set_player_hit(sender_id, in_timing)
 
 func _round_intro() -> void:
+	player1.play("idle")
+	player2.play("idle")
+	
 	if !multiplayer.is_server():
 		return
 
@@ -146,13 +152,10 @@ func _round_intro() -> void:
 func _round_over() -> void:
 	if !multiplayer.is_server():
 		return
-
+	
 	_sync_players()
 	_sync_players_hit_timing.rpc(hit_system.get_players_hit_timing())
 
 func _sync_players() -> void:
 	_set_round_state.rpc(RoundSystem.State.WAITING)
 	Lobby.set_players_syncing()
-
-func _generate_score_text(in_player_id: int, in_player_number: int) -> String:
-	return "Player" + str(in_player_number) + " score: " + str(score_system.get_player_score(in_player_id))
