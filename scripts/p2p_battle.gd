@@ -37,7 +37,7 @@ func _ready() -> void:
 	score_system.state_changed.connect(on_score_state_changed)
 	
 	# register players into the systems
-	for id in Lobby.players:
+	for id in Lobby.get_players():
 		score_system.register_player(id)
 		hit_system.register_player(id)
 	

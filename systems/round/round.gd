@@ -1,5 +1,5 @@
-class_name RoundSystem
 extends Node
+class_name RoundSystem
 ## Round management
 ##
 ## [color=Orange]Dependency:[/color] Requires [HitSystem] [br][br]

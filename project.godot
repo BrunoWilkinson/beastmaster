@@ -17,7 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-Lobby="*res://scripts/lobby.gd"
+Lobby="*res://systems/lobby/lobby.gd"
 
 [input]
 

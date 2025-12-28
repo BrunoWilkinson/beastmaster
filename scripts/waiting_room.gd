@@ -10,8 +10,8 @@ func _ready() -> void:
 	_reset_ui()
 	_on_player_list_set()
 	
-func _on_player_connected(peer_id: int, player_info: Dictionary[String, Variant]) -> void:
-	_set_player_name(_get_player_label(peer_id), player_info["Name"])
+func _on_player_connected(peer_id: int, player_info: Player) -> void:
+	_set_player_name(_get_player_label(peer_id), player_info.get_username())
 
 func _on_player_disconnected(peer_id: int) -> void:
 	_get_player_label(peer_id).hide()
@@ -20,8 +20,8 @@ func _on_server_disconnected() -> void:
 	_reset_ui()
 
 func _on_player_list_set():
-	for peer_id in Lobby.players.keys():
-		_set_player_name(_get_player_label(peer_id), Lobby.players[peer_id]["Name"])
+	for peer_id in Lobby.get_players().keys():
+		_set_player_name(_get_player_label(peer_id), Lobby.get_players()[peer_id].get_username())
 		
 	$ActionContainer/StartGameButton.visible = multiplayer.is_server()
 	$ActionContainer/StartGameButton.disabled = !Lobby.can_start_game()
