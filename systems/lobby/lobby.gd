@@ -96,7 +96,7 @@ func can_start_game() -> bool:
 	return _players.all(func(player: Player): return player.is_ready())
 
 ## [color=Orange]RPC function[/color][br]
-## When the host decides to start the game
+## Load a scene over the network
 @rpc("call_local", "reliable")
 func load_game(game_scene_path: String) -> void:
 	get_tree().change_scene_to_file(game_scene_path)
