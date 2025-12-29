@@ -37,9 +37,9 @@ func _ready() -> void:
 	score_system.state_changed.connect(on_score_state_changed)
 	
 	# register players into the systems
-	for id in Lobby.get_players():
-		score_system.register_player(id)
-		hit_system.register_player(id)
+	for player in Lobby.get_players():
+		score_system.register_player(player.get_peer_id())
+		hit_system.register_player(player.get_peer_id())
 	
 	round_number = $HUD/RoundNumber
 	round_number.visible = false
@@ -70,11 +70,12 @@ func _ready() -> void:
 	on_round_state_changed(round_system.get_state())
 	if multiplayer.is_server():
 		Lobby.player_sync_changed.connect(_on_player_sync_changed)
+		Lobby.players_loaded.connect(_on_player_loaded)
 		debug_type.text = "Server"
 	else:
 		debug_type.text = "Client"
 
-	Lobby.player_loaded.rpc_id(1)
+	Lobby.player_loaded.rpc()
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("hit") && round_system.get_state() == RoundSystem.State.BATTLE:
@@ -86,7 +87,7 @@ func _on_player_sync_changed() -> void:
 		if round_system.get_state() == RoundSystem.State.END:
 			score_system.update_score()
 
-func start_game() -> void:
+func _on_player_loaded() -> void:
 	if multiplayer.is_server():
 		_set_round_state.rpc(RoundSystem.State.INTRO)
 

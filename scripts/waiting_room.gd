@@ -4,14 +4,18 @@ func _ready() -> void:
 	Lobby.player_connected.connect(_on_player_connected)
 	Lobby.player_disconnected.connect(_on_player_disconnected)
 	Lobby.server_disconnected.connect(_on_server_disconnected)
-	Lobby.player_list_set.connect(_on_player_list_set)
+	Lobby.player_list_changed.connect(_on_player_list_set)
+	Lobby.player_ready_state_changed.connect(_on_player_ready_state_changed)
 	$ActionContainer/StartGameButton.button_down.connect(_on_start_game_button_down)
+	$ActionContainer/StartGameButton.visible = multiplayer.is_server()
+	$ActionContainer/StartGameButton.disabled = !Lobby.can_start_game()
 	$ActionContainer/ReadyButton.button_down.connect(_on_ready_button_down)
+	$ActionContainer/ReadyButton.visible = !multiplayer.is_server()
 	_reset_ui()
 	_on_player_list_set()
 	
-func _on_player_connected(peer_id: int, player_info: Player) -> void:
-	_set_player_name(_get_player_label(peer_id), player_info.get_username())
+func _on_player_connected(player: Player) -> void:
+	_set_player_name(_get_player_label(player.get_peer_id()), player.get_username())
 
 func _on_player_disconnected(peer_id: int) -> void:
 	_get_player_label(peer_id).hide()
@@ -19,13 +23,12 @@ func _on_player_disconnected(peer_id: int) -> void:
 func _on_server_disconnected() -> void:
 	_reset_ui()
 
-func _on_player_list_set():
-	for peer_id in Lobby.get_players().keys():
-		_set_player_name(_get_player_label(peer_id), Lobby.get_players()[peer_id].get_username())
-		
-	$ActionContainer/StartGameButton.visible = multiplayer.is_server()
+func _on_player_list_set() -> void:
+	for player in Lobby.get_players():
+		_set_player_name(_get_player_label(player.get_peer_id()), player.get_username())
+
+func _on_player_ready_state_changed(_in_player_id: int, _is_ready: bool) -> void:
 	$ActionContainer/StartGameButton.disabled = !Lobby.can_start_game()
-	$ActionContainer/ReadyButton.visible = !multiplayer.is_server()
 	
 	if Lobby.can_start_game():
 		$ActionContainer/ReadyButton.text = String("UnReady")
@@ -55,5 +58,4 @@ func _on_start_game_button_down() -> void:
 	Lobby.load_game.rpc("res://scenes/p2p_battle.tscn")
 
 func _on_ready_button_down() -> void:
-	Lobby.player_ready.rpc_id(1)
-	
+	Lobby.player_ready.rpc()
