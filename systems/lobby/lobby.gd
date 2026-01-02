@@ -125,6 +125,8 @@ func sync_done() -> void:
 	if multiplayer.is_server():
 		player_sync_changed.emit()
 
+# TODO: Call the rpc once by sending all the players in the PackedByteArray,
+# Instead calling _add_player per player
 @rpc("call_local", "reliable")
 func _add_player(in_packed_data: PackedByteArray):
 	var new_player: Player = Player.new()
@@ -141,6 +143,8 @@ func _on_peer_connected(id: int) -> void:
 		return
 	
 	_create_player(id)
+	# TODO: Call the rpc once by sending all the players in the PackedByteArray,
+	# Instead calling _add_player per player
 	for player in _players:
 		assert(player != null)
 		_add_player.rpc(player.get_packet())
