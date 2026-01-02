@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8shcaswd61gh"]
+
+[ext_resource type="Script" uid="uid://t8cnld2sa5kf" path="res://scenes/lobbies/lobbies.gd" id="1_ekx0a"]
+
+[node name="Lobbies" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ekx0a")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -504.0
+offset_top = 25.0
+offset_right = 504.0
+offset_bottom = 563.0
+grow_horizontal = 2
+horizontal_scroll_mode = 0
+
+[node name="LobbyList" type="ItemList" parent="ScrollContainer"]
+custom_minimum_size = Vector2(1000, 0)
+layout_mode = 2
+auto_width = true
+auto_height = true
+text_overrun_behavior = 0
+
+[node name="Join" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -64.5
+offset_top = -56.0
+offset_right = 64.5
+offset_bottom = -25.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "JOIN"

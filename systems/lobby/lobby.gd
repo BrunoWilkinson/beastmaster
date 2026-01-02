@@ -2,8 +2,8 @@ extends Node
 class_name LobbySystem
 ## Player Lobby Management
 ##
-## This system handles create and join of multiplayer sessions
-## It will keep track of player data during the lifespan of the game
+## This system handles create and join of multiplayer sessions and track of player data during the lifespan of the game [br]
+## Using the main run args with [code]enet[/code] allows the system to swap the backend mutilpayer API (steam or enet)
 
 ## Emit when a player joins the game
 signal player_connected(player: Player)
@@ -20,9 +20,11 @@ signal server_disconnected
 ## Emit when a player finished syncing
 signal player_sync_changed()
 
-# Only used for enet
+## Only used for enet multiplayer API
 const PORT: int = 7000
+## Only used for enet multiplayer API
 const DEFAULT_SERVER_IP: String = "127.0.0.1" # IPv4 localhost
+## Only used for enet multiplayer API
 const MAX_CONNECTIONS: int = 1
 
 var _enet_enabled: bool = false
@@ -38,27 +40,45 @@ func _ready() -> void:
 
 ## Create a game as the host
 func create_game() -> Error:
-	var peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
-	var error: Error = peer.create_server(PORT, MAX_CONNECTIONS)
+	var peer: MultiplayerPeer = null
+	var error: Error = Error.FAILED
+	
+	if _enet_enabled:
+		peer = ENetMultiplayerPeer.new()
+		error = peer.create_server(PORT, MAX_CONNECTIONS)
+	else:
+		peer = SteamMultiplayerPeer.new()
+		error = peer.create_host(0)
+	
 	if error != Error.OK:
 		return error
-
+	
 	multiplayer.multiplayer_peer = peer
 	_create_player(1)
 	return Error.OK
 
 ## Join a host game
-func join_game(address: String = "")-> Error:
-	if address.is_empty():
-		address = DEFAULT_SERVER_IP
+func join_game(steam_lobby_id: int)-> Error:	
+	var peer: MultiplayerPeer = null
+	var error: Error = Error.FAILED
+	
+	if _enet_enabled:
+		peer = ENetMultiplayerPeer.new()
+		error = peer.create_client(DEFAULT_SERVER_IP, PORT)
+	else:
+		var steam_host_id := Steam.getLobbyOwner(steam_lobby_id)
+		peer = SteamMultiplayerPeer.new()
+		error = peer.create_client(steam_host_id)
 
-	var peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
-	var error: = peer.create_client(address, PORT)
 	if error != Error.OK:
 		return error
 	
 	multiplayer.multiplayer_peer = peer
 	return Error.OK
+
+## Getter for enet args is in use
+func is_enet_enabled() -> bool:
+	return _enet_enabled
 
 ## Getter for the local list of players
 func get_players() -> Array[Player]:
