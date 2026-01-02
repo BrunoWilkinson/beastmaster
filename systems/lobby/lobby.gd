@@ -20,13 +20,16 @@ signal server_disconnected
 ## Emit when a player finished syncing
 signal player_sync_changed()
 
+# Only used for enet
 const PORT: int = 7000
 const DEFAULT_SERVER_IP: String = "127.0.0.1" # IPv4 localhost
 const MAX_CONNECTIONS: int = 1
 
+var _enet_enabled: bool = false
 var _players: Array[Player]
 
 func _ready() -> void:
+	_enet_enabled = OS.get_cmdline_args().has("enet")
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
