@@ -1,10 +1,10 @@
 [gd_scene load_steps=3 format=3 uid="uid://d4afimgx37fqq"]
 
-[ext_resource type="Script" uid="uid://boms6b55a7e7x" path="res://scripts/battle.gd" id="1_dn72j"]
-[ext_resource type="PackedScene" uid="uid://20opf3jw1xy2" path="res://scenes/hud.tscn" id="2_th188"]
+[ext_resource type="Script" uid="uid://boms6b55a7e7x" path="res://scenes/battle/battle.gd" id="1_ffvsa"]
+[ext_resource type="PackedScene" uid="uid://20opf3jw1xy2" path="res://scenes/hud.tscn" id="2_xd4uy"]
 
 [node name="Battle" type="Node2D"]
-script = ExtResource("1_dn72j")
+script = ExtResource("1_ffvsa")
 debug_show_elapsed_time = true
 
 [node name="ColorRect" type="ColorRect" parent="."]
@@ -18,7 +18,7 @@ color = Color(0.961018, 0.394469, 0.387683, 1)
 [node name="HitTimer" type="Timer" parent="."]
 one_shot = true
 
-[node name="HUD" parent="." instance=ExtResource("2_th188")]
+[node name="HUD" parent="." instance=ExtResource("2_xd4uy")]
 
 [node name="ShowInfoTimer" type="Timer" parent="."]
 wait_time = 2.0

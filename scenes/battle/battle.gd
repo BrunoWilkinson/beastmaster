@@ -67,7 +67,7 @@ func _ready() -> void:
 	update_enemy_score(0)
 	reset_state()
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	time_now = abs(Time.get_unix_time_from_system() - start_time)
 	if debug_elapsed_time_label.visible:
 		debug_elapsed_time_label.text = str(time_now)

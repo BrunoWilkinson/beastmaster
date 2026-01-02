@@ -1,5 +1,7 @@
 extends Control
 
+@export var p2p_battle_scene: PackedScene = null
+
 var start_game_button: Button = null
 var ready_button: Button = null
 var player_one_label: Label = null
@@ -7,6 +9,8 @@ var player_two_label: Label = null
 var player_two_ready_label: Label = null
 
 func _ready() -> void:
+	assert(p2p_battle_scene != null)
+	
 	start_game_button = $ActionContainer/StartGameButton
 	assert(start_game_button != null)
 	ready_button = $ActionContainer/ReadyButton
@@ -75,7 +79,7 @@ func _get_player_label(peer_id: int) -> Label:
 func _on_start_game_button_down() -> void:
 	if !Lobby.can_start_game():
 		return
-	Lobby.load_game.rpc("res://scenes/p2p_battle.tscn")
+	Lobby.load_game.rpc(p2p_battle_scene.resource_path)
 
 func _on_ready_button_down() -> void:
 	Lobby.player_ready.rpc()

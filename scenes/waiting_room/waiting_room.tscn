@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://d0fce0n5450h7"]
+[gd_scene load_steps=3 format=3 uid="uid://d0fce0n5450h7"]
 
-[ext_resource type="Script" uid="uid://dn21x57xs61ro" path="res://scripts/waiting_room.gd" id="1_0q7jc"]
+[ext_resource type="Script" uid="uid://dn21x57xs61ro" path="res://scenes/waiting_room/waiting_room.gd" id="1_1yeck"]
+[ext_resource type="PackedScene" uid="uid://fqvvkgx7l53v" path="res://scenes/p2p_battle/p2p_battle.tscn" id="2_676s3"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -9,7 +10,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_0q7jc")
+script = ExtResource("1_1yeck")
+p2p_battle_scene = ExtResource("2_676s3")
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 1

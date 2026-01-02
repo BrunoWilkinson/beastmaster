@@ -98,8 +98,8 @@ func can_start_game() -> bool:
 ## [color=Orange]RPC function[/color][br]
 ## Load a scene over the network
 @rpc("call_local", "reliable")
-func load_game(game_scene_path: String) -> void:
-	get_tree().change_scene_to_file(game_scene_path)
+func load_game(in_game_scene_path: String) -> void:
+	get_tree().change_scene_to_file(in_game_scene_path)
 
 ## [color=Orange]RPC function[/color][br]
 ## Update the ready state of a player for all peers
