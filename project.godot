@@ -16,11 +16,12 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 
 [autoload]
 
+Steamworks="*res://steam/steamworks.gd"
 Lobby="*res://systems/lobby/lobby.gd"
 
-[editor]
+[debug]
 
-run/main_run_args="enet"
+file_logging/enable_file_logging=true
 
 [input]
 
@@ -32,7 +33,4 @@ hit={
 
 [steam]
 
-initialization/app_id=0
-initialization/initialize_on_startup=false
-initialization/embed_callbacks=false
 multiplayer_peer/max_channels=4
