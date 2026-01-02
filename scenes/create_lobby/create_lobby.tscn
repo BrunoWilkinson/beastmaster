@@ -1,0 +1,62 @@
+[gd_scene load_steps=3 format=3 uid="uid://d38rbpu6vkvr3"]
+
+[ext_resource type="Script" uid="uid://6crjonn7mmsb" path="res://scenes/create_lobby/create_lobby.gd" id="1_iwgml"]
+[ext_resource type="PackedScene" uid="uid://d0fce0n5450h7" path="res://scenes/waiting_room/waiting_room.tscn" id="2_wl4s4"]
+
+[node name="CreateLobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_iwgml")
+_waiting_room_scene = ExtResource("2_wl4s4")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -276.0
+offset_top = 50.0
+offset_right = 276.0
+offset_bottom = 73.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 32
+text = "Lobby Creation"
+horizontal_alignment = 1
+uppercase = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -256.5
+offset_top = -30.25
+offset_right = 256.5
+offset_bottom = 30.25
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LobbyName" type="LineEdit" parent="VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Type lobby name here"
+
+[node name="Create" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -70.0
+offset_top = -81.0
+offset_right = 70.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "CREATE"

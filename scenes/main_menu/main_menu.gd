@@ -3,6 +3,7 @@ extends Control
 @export var _battle_scene: PackedScene = null
 @export var _waiting_room_scene: PackedScene = null
 @export var _lobbies_scene: PackedScene = null
+@export var _create_lobby: PackedScene = null
 
 var _play_vs_ai_button: Button = null
 var _host_button: Button = null
@@ -11,6 +12,11 @@ var _settings_button: Button = null
 var _exit_button: Button = null
 
 func _ready() -> void:
+	assert(_battle_scene != null)
+	assert(_waiting_room_scene != null)
+	assert(_lobbies_scene != null)
+	assert(_create_lobby != null)
+
 	_play_vs_ai_button = $VBoxContainer/PlayVsAI
 	assert(_play_vs_ai_button != null)
 	_play_vs_ai_button.button_down.connect(_play_vs_ai_button_down)
@@ -30,17 +36,16 @@ func _ready() -> void:
 	_exit_button = $VBoxContainer/ExitGame
 	assert(_exit_button != null)
 	_exit_button.button_down.connect(_exit_game_button_down)
-	
-	assert(_battle_scene != null)
-	assert(_waiting_room_scene != null)
-	assert(_lobbies_scene != null)
 
 func _play_vs_ai_button_down() -> void:
 	get_tree().change_scene_to_packed(_battle_scene)
 
 func _host_game_button_down() -> void:
-	Lobby.create_game()
-	get_tree().change_scene_to_packed(_waiting_room_scene)
+	if Lobby.is_enet_enabled():
+		Lobby.create_game()
+		get_tree().change_scene_to_packed(_waiting_room_scene)
+	else:
+		get_tree().change_scene_to_packed(_create_lobby)
 
 func _join_game_button_down() -> void:
 	if Lobby.is_enet_enabled():

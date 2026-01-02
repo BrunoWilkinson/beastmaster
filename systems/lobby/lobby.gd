@@ -29,6 +29,7 @@ const MAX_CONNECTIONS: int = 1
 
 var _enet_enabled: bool = false
 var _players: Array[Player]
+var _lobby_name: String
 
 func _ready() -> void:
 	_enet_enabled = OS.get_cmdline_args().has("enet")
@@ -37,9 +38,21 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_fail)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	
+	if !_enet_enabled:
+		Steam.lobby_created.connect(_on_lobby_created)
+
+## Create a Steam lobby with host
+func create_lobby_with_host(in_lobby_name: String) -> void:
+	_lobby_name = in_lobby_name
+	Steam.createLobby(Steam.LobbyType.LOBBY_TYPE_PUBLIC, 2)
+
+func _on_lobby_created(_connect: int, lobby_id: int) -> void:
+	Steam.setLobbyData(lobby_id, "name", _lobby_name)
+	create_game(lobby_id)
 
 ## Create a game as the host
-func create_game() -> Error:
+func create_game(in_lobby_id: int = -1) -> Error:
 	var peer: MultiplayerPeer = null
 	var error: Error = Error.FAILED
 	
@@ -48,7 +61,7 @@ func create_game() -> Error:
 		error = peer.create_server(PORT, MAX_CONNECTIONS)
 	else:
 		peer = SteamMultiplayerPeer.new()
-		error = peer.create_host(0)
+		error = peer.host_with_lobby(in_lobby_id)
 	
 	if error != Error.OK:
 		return error
@@ -58,7 +71,7 @@ func create_game() -> Error:
 	return Error.OK
 
 ## Join a host game
-func join_game(steam_lobby_id: int)-> Error:	
+func join_game(steam_lobby_id: int)-> Error:
 	var peer: MultiplayerPeer = null
 	var error: Error = Error.FAILED
 	

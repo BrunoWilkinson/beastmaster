@@ -1,5 +1,5 @@
 extends Node
-class_name SteamInit
+class_name SteamworksInit
 ## Steam Initialization
 ##
 ## Handles the SteamGodot setup (AppId, Callbacks, etc...)
